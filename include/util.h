@@ -33,6 +33,9 @@ int log_socket_prefix(enum LogLevel lev, void *ctx, char *dst, unsigned int dstl
 			log_generic(LG_NOISE, sk, ## args); \
 	} while (0)
 
+// Can we log based on duration ?
+bool can_log_duration(usec_t duration);
+
 /*
  * password tools
  */

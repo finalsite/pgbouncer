@@ -63,6 +63,26 @@ int log_socket_prefix(enum LogLevel lev, void *ctx, char *dst, unsigned int dstl
 	}
 }
 
+inline bool can_log_duration(usec_t duration)
+{
+	// If log_min_duration is 0, log everything, otherwise only log if it's greater than zero
+	// and duration > log_min_duration (which is exactly how log_min_duration_statement works
+	// in postgresql). Note: total is in microseconds and log_min_duration is in milliseconds,
+	// so we convert duration to milliseconds for the comparison.
+
+	if (cf_log_min_duration < 0) {
+		return false;
+	// enabled for all durations
+	} else if (cf_log_min_duration == 0) {
+		return true;
+	// enabled for durations that exceed log_min_duration
+	} else {
+		// duration is going to be in microseconds, so convert it to milliseconds
+		// before comparing to log_min_duration
+		return ((duration / 1000) > (unsigned long long) cf_log_min_duration);
+	}
+}
+
 const char *bin2hex(const uint8_t *src, unsigned srclen, char *dst, unsigned dstlen)
 {
 	unsigned int i, j;
