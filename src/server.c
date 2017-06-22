@@ -354,8 +354,17 @@ static bool handle_server_work(PgSocket *server, PktHdr *pkt)
 				total = get_cached_time() - client->query_start;
 				client->query_start = 0;
 				server->pool->stats.query_time += total;
-				slog_debug(client, "query time: %d us", (int)total);
-			} else if ((ready || idle_tx) && !async_response) {
+
+				if (can_log_duration(total)) {
+					#define MSEC 1000
+					if (client->vars.var_list[VSearchPath] != NULL && client->vars.var_list[VSearchPath]->len > 0) {
+						slog_info(client, "- query time: %0.3f ms - search_path: [%s]",
+							(double) (total / MSEC), client->vars.var_list[VSearchPath]->str);
+					} else {
+						slog_info(client, "- query time: %0.3f ms - search_path: <unset>", (double) (total / MSEC));
+					}
+				}
+			} else if (ready) {
 				slog_warning(client, "FIXME: query end, but query_start == 0");
 			}
 
