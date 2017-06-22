@@ -144,6 +144,9 @@ int cf_log_disconnections;
 int cf_log_pooler_errors;
 int cf_application_name_add_host;
 
+int cf_consistent_search_path;
+int cf_application_name_from_search_path;
+
 int cf_client_tls_sslmode;
 char *cf_client_tls_protocols;
 char *cf_client_tls_ca_file;
@@ -185,6 +188,20 @@ const struct CfLookup pool_mode_map[] = {
 	{ "transaction", POOL_TX },
 	{ "statement", POOL_STMT },
 	{ NULL }
+};
+
+const struct CfLookup boolean_setting_map[] = {
+  { "disable", 0 },
+  { "disabled", 0 },
+  { "no", 0 },
+  { "off", 0 },
+  { "enable", 1 },
+  { "enabled", 1 },
+  { "yes", 1 },
+  { "on", 1 },
+  { "1", 1 },
+  { "0", 0 },
+  { NULL }
 };
 
 const struct CfLookup sslmode_map[] = {
@@ -274,6 +291,10 @@ CF_ABS("log_connections", CF_INT, cf_log_connections, 0, "1"),
 CF_ABS("log_disconnections", CF_INT, cf_log_disconnections, 0, "1"),
 CF_ABS("log_pooler_errors", CF_INT, cf_log_pooler_errors, 0, "1"),
 CF_ABS("application_name_add_host", CF_INT, cf_application_name_add_host, 0, "0"),
+
+CF_ABS("consistent_search_path", CF_LOOKUP(boolean_setting_map), cf_consistent_search_path, 0, "disabled"),
+CF_ABS("enable_consistent_search_path", CF_LOOKUP(boolean_setting_map), cf_consistent_search_path, 0, "disabled"),
+CF_ABS("application_name_from_search_path", CF_LOOKUP(boolean_setting_map), cf_application_name_from_search_path, 0, "disabled"),
 
 CF_ABS("client_tls_sslmode", CF_LOOKUP(sslmode_map), cf_client_tls_sslmode, CF_NO_RELOAD, "disable"),
 CF_ABS("client_tls_ca_file", CF_STR, cf_client_tls_ca_file, CF_NO_RELOAD, ""),
