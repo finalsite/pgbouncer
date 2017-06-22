@@ -214,6 +214,29 @@ int user_max_connections(PgUser *user)
 	}
 }
 
+static inline bool can_log_duration(usec_t duration)
+{
+	/* If log_min_duration is 0, log everything, otherwise only log if it's greater than zero
+	 * and duration > log_min_duration (which is exactly how log_min_duration_statement works
+	 * in postgresql). Note: total is in microseconds and log_min_duration is in milliseconds,
+	 * so we convert duration to milliseconds for the comparison.
+	 */
+
+	/* log nothing */
+	if (cf_log_min_duration < 0)
+		return false;
+
+	/* log everything */
+	if (cf_log_min_duration == 0)
+		return true;
+
+	/* log for sufficient duration
+	 * duration is going to be in microseconds, so convert it to milliseconds
+	 * before comparing to log_min_duration
+	 */
+	return ((duration / USEC_PER_MSEC) >= (unsigned long long) cf_log_min_duration);
+}
+
 /* process packets on logged in connection */
 static bool handle_server_work(PgSocket *server, PktHdr *pkt)
 {
@@ -354,7 +377,23 @@ static bool handle_server_work(PgSocket *server, PktHdr *pkt)
 				total = get_cached_time() - client->query_start;
 				client->query_start = 0;
 				server->pool->stats.query_time += total;
-				slog_debug(client, "query time: %d us", (int)total);
+
+				if (can_log_duration(total)) {
+					char *strptr, opunc, cpunc;
+					if (client->vars.var_list[VSearchPath] != NULL && client->vars.var_list[VSearchPath]->len > 0) {
+						strptr = client->vars.var_list[VSearchPath]->str;
+						opunc  = '[';
+						cpunc  = ']';
+					} else {
+						strptr = "unset";
+						opunc  = '<';
+						cpunc  = '>';
+					}
+					/* changed from debug to info for finalsite */
+					slog_info(client, "- query time: %0.3f ms - search_path: %c%s%c",
+					          (double) (total / USEC_PER_MSEC),
+						  opunc, strptr, cpunc);
+				}
 			} else if ((ready || idle_tx) && !async_response) {
 				slog_warning(client, "FIXME: query end, but query_start == 0");
 			}
