@@ -1,0 +1,2 @@
+language: c
+script: git submodule init && git submodule update && ./autogen.sh && ./configure && make
