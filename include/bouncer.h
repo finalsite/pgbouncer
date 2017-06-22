@@ -147,6 +147,8 @@ extern int cf_sbuf_len;
 /* buffer size for startup noise */
 #define STARTUP_BUF	1024
 
+#define USEC_PER_MSEC 1000
+
 
 /*
  * Remote/local address
@@ -465,6 +467,7 @@ extern int cf_tcp_defer_accept;
 extern int cf_log_connections;
 extern int cf_log_disconnections;
 extern int cf_log_pooler_errors;
+extern long cf_log_min_duration;
 extern int cf_application_name_add_host;
 
 extern int cf_client_tls_sslmode;
